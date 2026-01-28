@@ -178,7 +178,6 @@ resource "aws_route53_record" "site_a" {
   name    = var.domain_name
   type    = "A"
   allow_overwrite = true
-
   alias {
     name                   = aws_cloudfront_distribution.site.domain_name
     zone_id                = aws_cloudfront_distribution.site.hosted_zone_id
