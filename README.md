@@ -73,6 +73,16 @@ terraform apply \
 
 If the bucket name is already taken by another AWS account, you must pick a different domain/bucket name because S3 bucket names are globally unique. Re-run `terraform apply` whenever you update files in `site/` to push the changes.
 
+### Troubleshooting
+
+If Terraform fails updating the CloudFront distribution with an error like:
+
+```
+IllegalUpdate: Only one viewer certificate change may be in progress at a time.
+```
+
+wait for the in-progress CloudFront certificate update to finish (often 15-30 minutes) and re-run `terraform apply`. CloudFront allows only one viewer certificate change at a time, so back-to-back updates can briefly overlap while propagation completes.
+
 ## Deploy site files
 
 Upload static files from the `site/` directory and invalidate CloudFront so HTTPS content updates immediately:
