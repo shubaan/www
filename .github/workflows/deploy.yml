@@ -27,5 +27,14 @@ jobs:
       - name: Sync site to S3
         run: aws s3 sync ./site s3://${{ secrets.S3_BUCKET }} --delete
 
+      - name: Ensure HTML content type
+        run: |
+          aws s3 cp ./site s3://${{ secrets.S3_BUCKET }} \
+            --recursive \
+            --exclude "*" \
+            --include "*.html" \
+            --content-type "text/html; charset=utf-8" \
+            --metadata-directive REPLACE
+
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"

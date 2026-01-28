@@ -38,7 +38,7 @@ locals {
   bucket_id                   = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].id : aws_s3_bucket.site[0].id
   bucket_arn                  = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].arn : aws_s3_bucket.site[0].arn
   bucket_regional_domain_name = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].bucket_regional_domain_name : aws_s3_bucket.site[0].bucket_regional_domain_name
-  default_content_types       = { "index.html" = "text/html" }
+  default_content_types       = { "index.html" = "text/html; charset=utf-8" }
   content_types               = merge(local.default_content_types, var.content_types)
 }
 
