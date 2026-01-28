@@ -177,7 +177,7 @@ resource "aws_route53_record" "site_a" {
   zone_id = data.aws_route53_zone.primary.zone_id
   name    = var.domain_name
   type    = "A"
-
+  allow_overwrite = true
   alias {
     name                   = aws_cloudfront_distribution.site.domain_name
     zone_id                = aws_cloudfront_distribution.site.hosted_zone_id
@@ -189,6 +189,7 @@ resource "aws_route53_record" "site_aaaa" {
   zone_id = data.aws_route53_zone.primary.zone_id
   name    = var.domain_name
   type    = "AAAA"
+  allow_overwrite = true
 
   alias {
     name                   = aws_cloudfront_distribution.site.domain_name

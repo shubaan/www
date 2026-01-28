@@ -48,6 +48,7 @@ Example policy for the deploy role (scope it to your bucket and distribution):
   ]
 }
 ```
+
 ## Provision AWS resources
 
 The Terraform configuration creates:
@@ -62,13 +63,8 @@ cd infra/terraform
 terraform init
 terraform apply \
   -var="domain_name=www.shubaan.com" \
-  -var="zone_name=shubaan.com"
-```
-
-If the bucket already exists in your AWS account, reuse it by adding:
-
-```bash
--var="use_existing_bucket=true"
+  -var="zone_name=shubaan.com" \
+  -var="use_existing_bucket=true"
 ```
 
 If the bucket name is already taken by another AWS account, you must pick a different domain/bucket name because S3 bucket names are globally unique.
