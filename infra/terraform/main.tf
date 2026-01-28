@@ -25,15 +25,16 @@ data "aws_route53_zone" "primary" {
 
 resource "aws_s3_bucket" "site" {
   count  = var.use_existing_bucket ? 0 : 1
-  bucket = var.domain_name
+  bucket = local.bucket_name
 }
 
 data "aws_s3_bucket" "existing" {
   count  = var.use_existing_bucket ? 1 : 0
-  bucket = var.domain_name
+  bucket = local.bucket_name
 }
 
 locals {
+  bucket_name                 = coalesce(var.s3_bucket_name, var.domain_name)
   bucket_id                   = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].id : aws_s3_bucket.site[0].id
   bucket_arn                  = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].arn : aws_s3_bucket.site[0].arn
   bucket_regional_domain_name = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].bucket_regional_domain_name : aws_s3_bucket.site[0].bucket_regional_domain_name
@@ -57,6 +58,15 @@ resource "aws_s3_bucket_public_access_block" "site" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_s3_object" "site_assets" {
+  for_each     = fileset("${path.module}/../../site", "**")
+  bucket       = local.bucket_name
+  key          = each.value
+  source       = "${path.module}/../../site/${each.value}"
+  etag         = filemd5("${path.module}/../../site/${each.value}")
+  content_type = try(var.content_types[each.value], null)
 }
 
 resource "aws_cloudfront_origin_access_control" "site" {
