@@ -78,6 +78,12 @@ Upload static files from the `site/` directory and invalidate CloudFront so HTTP
 
 ```bash
 aws s3 sync ./site s3://<bucket-name> --delete
+aws s3 cp ./site s3://<bucket-name> \
+  --recursive \
+  --exclude "*" \
+  --include "*.html" \
+  --content-type "text/html; charset=utf-8" \
+  --metadata-directive REPLACE
 aws cloudfront create-invalidation --distribution-id <distribution-id> --paths "/*"
 ```
 

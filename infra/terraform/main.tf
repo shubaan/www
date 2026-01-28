@@ -38,6 +38,8 @@ locals {
   bucket_id                   = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].id : aws_s3_bucket.site[0].id
   bucket_arn                  = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].arn : aws_s3_bucket.site[0].arn
   bucket_regional_domain_name = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].bucket_regional_domain_name : aws_s3_bucket.site[0].bucket_regional_domain_name
+  default_content_types       = { "index.html" = "text/html; charset=utf-8" }
+  content_types               = merge(local.default_content_types, var.content_types)
 }
 
 resource "aws_s3_bucket_website_configuration" "site" {
@@ -66,7 +68,7 @@ resource "aws_s3_object" "site_assets" {
   key          = each.value
   source       = "${path.module}/../../site/${each.value}"
   etag         = filemd5("${path.module}/../../site/${each.value}")
-  content_type = try(var.content_types[each.value], null)
+  content_type = try(local.content_types[each.value], null)
 }
 
 resource "aws_cloudfront_origin_access_control" "site" {
