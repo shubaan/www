@@ -6,7 +6,13 @@ variable "aws_region" {
 
 variable "domain_name" {
   type        = string
-  description = "Domain name for the site (e.g., www.shubaan.com)."
+  description = "Primary domain name for the site (e.g., shubaan.com)."
+}
+
+variable "alternate_domains" {
+  type        = list(string)
+  description = "Additional domain names (SANs) for the CloudFront distribution and ACM certificate."
+  default     = []
 }
 
 variable "s3_bucket_name" {
