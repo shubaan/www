@@ -24,11 +24,23 @@ data "aws_route53_zone" "primary" {
 }
 
 resource "aws_s3_bucket" "site" {
+  count  = var.use_existing_bucket ? 0 : 1
   bucket = var.domain_name
 }
 
+data "aws_s3_bucket" "existing" {
+  count  = var.use_existing_bucket ? 1 : 0
+  bucket = var.domain_name
+}
+
+locals {
+  bucket_id                   = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].id : aws_s3_bucket.site[0].id
+  bucket_arn                  = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].arn : aws_s3_bucket.site[0].arn
+  bucket_regional_domain_name = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].bucket_regional_domain_name : aws_s3_bucket.site[0].bucket_regional_domain_name
+}
+
 resource "aws_s3_bucket_website_configuration" "site" {
-  bucket = aws_s3_bucket.site.id
+  bucket = local.bucket_id
 
   index_document {
     suffix = "index.html"
@@ -40,7 +52,7 @@ resource "aws_s3_bucket_website_configuration" "site" {
 }
 
 resource "aws_s3_bucket_public_access_block" "site" {
-  bucket                  = aws_s3_bucket.site.id
+  bucket                  = local.bucket_id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
@@ -70,11 +82,12 @@ resource "aws_route53_record" "cert_validation" {
     }
   }
 
-  zone_id = data.aws_route53_zone.primary.zone_id
-  name    = each.value.name
-  type    = each.value.type
-  ttl     = 300
-  records = [each.value.record]
+  zone_id         = data.aws_route53_zone.primary.zone_id
+  name            = each.value.name
+  type            = each.value.type
+  ttl             = 300
+  records         = [each.value.record]
+  allow_overwrite = true
 }
 
 resource "aws_acm_certificate_validation" "site" {
@@ -89,15 +102,15 @@ resource "aws_cloudfront_distribution" "site" {
   default_root_object = "index.html"
 
   origin {
-    domain_name              = aws_s3_bucket.site.bucket_regional_domain_name
-    origin_id                = "s3-${aws_s3_bucket.site.id}"
+    domain_name              = local.bucket_regional_domain_name
+    origin_id                = "s3-${local.bucket_id}"
     origin_access_control_id = aws_cloudfront_origin_access_control.site.id
   }
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = "s3-${aws_s3_bucket.site.id}"
+    target_origin_id = "s3-${local.bucket_id}"
 
     viewer_protocol_policy = "redirect-to-https"
 
@@ -140,7 +153,7 @@ resource "aws_cloudfront_distribution" "site" {
 }
 
 resource "aws_s3_bucket_policy" "site" {
-  bucket = aws_s3_bucket.site.id
+  bucket = local.bucket_id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -149,7 +162,7 @@ resource "aws_s3_bucket_policy" "site" {
         Effect    = "Allow"
         Principal = { Service = "cloudfront.amazonaws.com" }
         Action    = ["s3:GetObject"]
-        Resource  = "${aws_s3_bucket.site.arn}/*"
+        Resource  = "${local.bucket_arn}/*"
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cloudfront_distribution.site.arn

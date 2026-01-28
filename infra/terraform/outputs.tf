@@ -1,5 +1,5 @@
 output "bucket_name" {
-  value       = aws_s3_bucket.site.id
+  value       = var.domain_name
   description = "S3 bucket that stores the site assets."
 }
 
