@@ -48,7 +48,6 @@ Example policy for the deploy role (scope it to your bucket and distribution):
   ]
 }
 ```
-
 ## Provision AWS resources
 
 The Terraform configuration creates:
