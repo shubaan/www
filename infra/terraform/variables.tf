@@ -25,3 +25,9 @@ variable "zone_name" {
   type        = string
   description = "Route53 hosted zone name (e.g., shubaan.com)."
 }
+
+variable "content_types" {
+  type        = map(string)
+  description = "Optional map of content types keyed by relative site file path."
+  default     = {}
+}

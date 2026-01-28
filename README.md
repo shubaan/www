@@ -58,6 +58,7 @@ The Terraform configuration creates:
 - CloudFront distribution with an origin access control (OAC).
 - ACM certificate (us-east-1) validated by Route53 DNS records.
 - Route53 A/AAAA alias records pointing the domain to CloudFront.
+- Site assets uploaded from the `site/` directory on `terraform apply`.
 
 ```bash
 cd infra/terraform
@@ -69,7 +70,7 @@ terraform apply \
   -var="use_existing_bucket=true"
 ```
 
-If the bucket name is already taken by another AWS account, you must pick a different domain/bucket name because S3 bucket names are globally unique.
+If the bucket name is already taken by another AWS account, you must pick a different domain/bucket name because S3 bucket names are globally unique. Re-run `terraform apply` whenever you update files in `site/` to push the changes.
 
 ## Deploy site files
 

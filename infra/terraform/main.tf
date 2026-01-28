@@ -60,6 +60,15 @@ resource "aws_s3_bucket_public_access_block" "site" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_object" "site_assets" {
+  for_each     = fileset("${path.module}/../../site", "**")
+  bucket       = local.bucket_name
+  key          = each.value
+  source       = "${path.module}/../../site/${each.value}"
+  etag         = filemd5("${path.module}/../../site/${each.value}")
+  content_type = try(var.content_types[each.value], null)
+}
+
 resource "aws_cloudfront_origin_access_control" "site" {
   name                              = "${var.domain_name}-oac"
   description                       = "OAC for ${var.domain_name}"
