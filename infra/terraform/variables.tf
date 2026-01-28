@@ -6,7 +6,13 @@ variable "aws_region" {
 
 variable "domain_name" {
   type        = string
-  description = "Domain name for the site and S3 bucket (e.g., www.shubaan.com)."
+  description = "Domain name for the site (e.g., www.shubaan.com)."
+}
+
+variable "s3_bucket_name" {
+  type        = string
+  description = "Optional S3 bucket name override. Defaults to the domain name when unset."
+  default     = null
 }
 
 variable "use_existing_bucket" {
