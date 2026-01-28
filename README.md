@@ -1,4 +1,4 @@
-# www.shubaan.com
+# shubaan.com
 
 Infrastructure and deployment assets for the static website.
 
@@ -34,12 +34,12 @@ Example policy for the deploy role (scope it to your bucket and distribution):
     {
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
-      "Resource": "arn:aws:s3:::www.shubaan.com"
+      "Resource": "arn:aws:s3:::shubaan.com"
     },
     {
       "Effect": "Allow",
       "Action": ["s3:PutObject", "s3:DeleteObject", "s3:GetObject"],
-      "Resource": "arn:aws:s3:::www.shubaan.com/*"
+      "Resource": "arn:aws:s3:::shubaan.com/*"
     },
     {
       "Effect": "Allow",
@@ -54,23 +54,34 @@ Example policy for the deploy role (scope it to your bucket and distribution):
 
 The Terraform configuration creates:
 
-- S3 bucket named after the domain (e.g., `www.shubaan.com`) with static website hosting.
+- S3 bucket named after the primary domain (e.g., `shubaan.com`) with static website hosting.
 - CloudFront distribution with an origin access control (OAC).
-- ACM certificate (us-east-1) validated by Route53 DNS records.
-- Route53 A/AAAA alias records pointing the domain to CloudFront.
+- ACM certificate (us-east-1) validated by Route53 DNS records, including any alternate domains.
+- Route53 A/AAAA alias records pointing the primary and alternate domains to CloudFront.
 - Site assets uploaded from the `site/` directory on `terraform apply`.
 
 ```bash
 cd infra/terraform
 terraform init
 terraform apply \
-  -var="domain_name=www.shubaan.com" \
-  -var="s3_bucket_name=www.shubaan.com" \
+  -var="domain_name=shubaan.com" \
+  -var='alternate_domains=["www.shubaan.com"]' \
+  -var="s3_bucket_name=shubaan.com" \
   -var="zone_name=shubaan.com" \
   -var="use_existing_bucket=true"
 ```
 
 If the bucket name is already taken by another AWS account, you must pick a different domain/bucket name because S3 bucket names are globally unique. Re-run `terraform apply` whenever you update files in `site/` to push the changes.
+
+### Troubleshooting
+
+If Terraform fails updating the CloudFront distribution with an error like:
+
+```
+IllegalUpdate: Only one viewer certificate change may be in progress at a time.
+```
+
+wait for the in-progress CloudFront certificate update to finish (often 15-30 minutes) and re-run `terraform apply`. CloudFront allows only one viewer certificate change at a time, so back-to-back updates can briefly overlap while propagation completes.
 
 ## Deploy site files
 

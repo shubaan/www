@@ -40,6 +40,7 @@ locals {
   bucket_regional_domain_name = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].bucket_regional_domain_name : aws_s3_bucket.site[0].bucket_regional_domain_name
   default_content_types       = { "index.html" = "text/html; charset=utf-8" }
   content_types               = merge(local.default_content_types, var.content_types)
+  all_domains                 = distinct(concat([var.domain_name], var.alternate_domains))
 }
 
 resource "aws_s3_bucket_website_configuration" "site" {
@@ -82,6 +83,7 @@ resource "aws_cloudfront_origin_access_control" "site" {
 resource "aws_acm_certificate" "site" {
   provider          = aws.us_east_1
   domain_name       = var.domain_name
+  subject_alternative_names = var.alternate_domains
   validation_method = "DNS"
 }
 
@@ -110,7 +112,7 @@ resource "aws_acm_certificate_validation" "site" {
 
 resource "aws_cloudfront_distribution" "site" {
   enabled             = true
-  aliases             = [var.domain_name]
+  aliases             = local.all_domains
   default_root_object = "index.html"
 
   origin {
@@ -186,9 +188,11 @@ resource "aws_s3_bucket_policy" "site" {
 }
 
 resource "aws_route53_record" "site_a" {
-  zone_id = data.aws_route53_zone.primary.zone_id
-  name    = var.domain_name
-  type    = "A"
+  for_each = toset(local.all_domains)
+
+  zone_id         = data.aws_route53_zone.primary.zone_id
+  name            = each.value
+  type            = "A"
   allow_overwrite = true
 
   alias {
@@ -199,9 +203,11 @@ resource "aws_route53_record" "site_a" {
 }
 
 resource "aws_route53_record" "site_aaaa" {
-  zone_id = data.aws_route53_zone.primary.zone_id
-  name    = var.domain_name
-  type    = "AAAA"
+  for_each = toset(local.all_domains)
+
+  zone_id         = data.aws_route53_zone.primary.zone_id
+  name            = each.value
+  type            = "AAAA"
   allow_overwrite = true
 
   alias {
