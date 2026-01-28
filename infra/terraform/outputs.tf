@@ -1,5 +1,5 @@
 output "bucket_name" {
-  value       = var.domain_name
+  value       = local.bucket_name
   description = "S3 bucket that stores the site assets."
 }
 
