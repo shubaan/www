@@ -23,6 +23,7 @@ If you want the GitHub Actions workflow to deploy, create an IAM role that trust
 - `AWS_ROLE_ARN`
 - `AWS_REGION` (e.g., `us-east-1`)
 - `CLOUDFRONT_DISTRIBUTION_ID`
+- `S3_BUCKET` (bucket name for site assets)
 
 Example policy for the deploy role (scope it to your bucket and distribution):
 
@@ -63,6 +64,7 @@ cd infra/terraform
 terraform init
 terraform apply \
   -var="domain_name=www.shubaan.com" \
+  -var="s3_bucket_name=www.shubaan.com" \
   -var="zone_name=shubaan.com" \
   -var="use_existing_bucket=true"
 ```
@@ -74,7 +76,7 @@ If the bucket name is already taken by another AWS account, you must pick a diff
 Upload static files from the `site/` directory and invalidate CloudFront so HTTPS content updates immediately:
 
 ```bash
-aws s3 sync ./site s3://www.shubaan.com --delete
+aws s3 sync ./site s3://<bucket-name> --delete
 aws cloudfront create-invalidation --distribution-id <distribution-id> --paths "/*"
 ```
 
@@ -85,5 +87,6 @@ A GitHub Actions workflow is included. Configure the following GitHub secrets:
 - `AWS_ROLE_ARN` (OIDC role with `s3:PutObject`, `s3:DeleteObject`, `cloudfront:CreateInvalidation`)
 - `AWS_REGION` (e.g., `us-east-1`)
 - `CLOUDFRONT_DISTRIBUTION_ID`
+- `S3_BUCKET` (bucket name for site assets)
 
 The workflow deploys `site/` on pushes to `main`.

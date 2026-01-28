@@ -25,15 +25,16 @@ data "aws_route53_zone" "primary" {
 
 resource "aws_s3_bucket" "site" {
   count  = var.use_existing_bucket ? 0 : 1
-  bucket = var.domain_name
+  bucket = local.bucket_name
 }
 
 data "aws_s3_bucket" "existing" {
   count  = var.use_existing_bucket ? 1 : 0
-  bucket = var.domain_name
+  bucket = local.bucket_name
 }
 
 locals {
+  bucket_name                 = coalesce(var.s3_bucket_name, var.domain_name)
   bucket_id                   = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].id : aws_s3_bucket.site[0].id
   bucket_arn                  = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].arn : aws_s3_bucket.site[0].arn
   bucket_regional_domain_name = var.use_existing_bucket ? data.aws_s3_bucket.existing[0].bucket_regional_domain_name : aws_s3_bucket.site[0].bucket_regional_domain_name
